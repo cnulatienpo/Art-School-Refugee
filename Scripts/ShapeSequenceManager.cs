@@ -8,6 +8,7 @@ public class ShapeSequenceManager : MonoBehaviour
     public Transform rotator;
     public TextMeshProUGUI cardText;
     // Reference to the rotation gizmo so we can assign the active object
+    [SerializeField]
     public MouseRotateTarget rotationGizmo;
 
     private Dictionary<string, string> shapeText = new Dictionary<string, string>();
@@ -18,6 +19,21 @@ public class ShapeSequenceManager : MonoBehaviour
     void Start()
     {
         LoadShapeData();
+
+        // If the rotation gizmo wasn't assigned in the inspector, try to
+        // locate it in the scene by name so we can still rotate new shapes
+        if (rotationGizmo == null)
+        {
+            GameObject gizmoObj = GameObject.Find("rotation gizmo");
+            if (gizmoObj != null)
+            {
+                rotationGizmo = gizmoObj.GetComponent<MouseRotateTarget>();
+            }
+            else
+            {
+                Debug.LogWarning("Rotation gizmo not found in the scene.");
+            }
+        }
 
         Transform clearSphere = rotator != null ? rotator.Find("ClearSphere") : null;
         if (clearSphere != null)
