@@ -46,6 +46,9 @@ public class ShapeSequenceManager : MonoBehaviour
 
         // Setup the NextButton to call ShowNextShape when clicked
         SetupNextButton();
+
+        // Create the text container and close button if they don't already exist
+        SetupTextCard();
     }
 
     void LoadShapeData()
@@ -178,5 +181,65 @@ public class ShapeSequenceManager : MonoBehaviour
         {
             Debug.LogWarning("NextButton could not be found or created.");
         }
+    }
+
+    /// <summary>
+    /// Ensures a TextCard container exists under "ShapeCard/Panel".
+    /// Adds a small close button that hides the container when clicked.
+    /// </summary>
+    void SetupTextCard()
+    {
+        if (cardText != null)
+            return; // already set up in the inspector
+
+        // locate the base panel that already exists in the scene
+        GameObject panelGO = GameObject.Find("ShapeCard/Panel");
+        if (panelGO == null)
+        {
+            Debug.LogWarning("Panel 'ShapeCard/Panel' not found for TextCard setup.");
+            return;
+        }
+
+        // create TextCard container
+        GameObject textCardGO = new GameObject("TextCard", typeof(RectTransform));
+        textCardGO.transform.SetParent(panelGO.transform, false);
+
+        RectTransform cardRT = textCardGO.GetComponent<RectTransform>();
+        cardRT.anchorMin = Vector2.zero;
+        cardRT.anchorMax = Vector2.one;
+        cardRT.offsetMin = Vector2.zero;
+        cardRT.offsetMax = Vector2.zero;
+
+        // create the TMP text element
+        GameObject txtGO = new GameObject("Description", typeof(TextMeshProUGUI));
+        txtGO.transform.SetParent(textCardGO.transform, false);
+        cardText = txtGO.GetComponent<TextMeshProUGUI>();
+        cardText.alignment = TextAlignmentOptions.Center;
+        cardText.enableAutoSizing = true;
+
+        // create close button anchored bottom right
+        GameObject btnGO = new GameObject("CloseButton", typeof(RectTransform), typeof(Button), typeof(Image));
+        btnGO.transform.SetParent(textCardGO.transform, false);
+        RectTransform btnRT = btnGO.GetComponent<RectTransform>();
+        btnRT.anchorMin = new Vector2(1f, 0f);
+        btnRT.anchorMax = new Vector2(1f, 0f);
+        btnRT.pivot = new Vector2(1f, 0f);
+        btnRT.anchoredPosition = new Vector2(-5f, 5f);
+        btnRT.sizeDelta = new Vector2(20f, 20f);
+
+        // style button with a circular sprite and X label
+        Image btnImage = btnGO.GetComponent<Image>();
+        btnImage.sprite = Resources.GetBuiltinResource<Sprite>("UI/Skin/Knob.psd");
+        btnImage.type = Image.Type.Simple;
+
+        GameObject xText = new GameObject("Label", typeof(TextMeshProUGUI));
+        xText.transform.SetParent(btnGO.transform, false);
+        TextMeshProUGUI xLabel = xText.GetComponent<TextMeshProUGUI>();
+        xLabel.text = "X";
+        xLabel.alignment = TextAlignmentOptions.Center;
+        xLabel.fontSize = 18f;
+
+        Button closeButton = btnGO.GetComponent<Button>();
+        closeButton.onClick.AddListener(() => textCardGO.SetActive(false));
     }
 }
