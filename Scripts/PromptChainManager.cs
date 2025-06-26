@@ -3,6 +3,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
+using System.Text;
 
 [System.Serializable]
 public class PromptPiece
@@ -109,6 +110,28 @@ public class PromptChainManager : MonoBehaviour
         UpdateRenderingImage(piece.rendering);
 
         promptChain.Add(chunk);
-        promptText.text = string.Join(" ", promptChain);
+        UpdatePromptDisplay();
+    }
+
+    void UpdatePromptDisplay()
+    {
+        if (promptText == null)
+            return;
+
+        promptText.richText = true;
+        var sb = new System.Text.StringBuilder();
+        int count = promptChain.Count;
+        for (int i = 0; i < count; i++)
+        {
+            int age = count - 1 - i; // 0 is newest
+            float intensity = Mathf.Clamp01(1f - age * 0.15f);
+            Color color = new Color(intensity, intensity, intensity);
+            string hex = ColorUtility.ToHtmlStringRGB(color);
+            sb.Append("<color=#" + hex + ">" + promptChain[i] + "</color>");
+            if (i < count - 1)
+                sb.Append(" ");
+        }
+
+        promptText.text = sb.ToString();
     }
 }
