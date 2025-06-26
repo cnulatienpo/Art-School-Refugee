@@ -1,6 +1,9 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
+using System.Text;
+using UnityEngine.Networking;
 using UnityEngine;
 
 /// <summary>
@@ -38,6 +41,11 @@ public class MessHallSessionTracker : MonoBehaviour
 
     const float AbandonThreshold = 0.05f; // <5% drawing considered abandoned
     const string DataFolder = "messhall_data";
+
+    [Header("Server Upload")]
+    [Tooltip("Endpoint for the session upload API")]
+    public string uploadUrl = "http://localhost:5000/api/messhall/upload"; //
+        Set this to your remote server URL when deployed
 
     readonly SessionData data = new SessionData();
     DateTime startTime;
@@ -155,5 +163,26 @@ public class MessHallSessionTracker : MonoBehaviour
         string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss");
         string path = Path.Combine(dir, $"{timestamp}.json");
         File.WriteAllText(path, JsonUtility.ToJson(data, true));
+
+        StartCoroutine(SendSessionToServer(data));
+    }
+
+    IEnumerator SendSessionToServer(SessionData payload)
+    {
+        string json = JsonUtility.ToJson(payload);
+        byte[] body = Encoding.UTF8.GetBytes(json);
+        using (UnityWebRequest req = new UnityWebRequest(uploadUrl, "POST"))
+        {
+            req.uploadHandler = new UploadHandlerRaw(body);
+            req.downloadHandler = new DownloadHandlerBuffer();
+            req.SetRequestHeader("Content-Type", "application/json");
+
+            yield return req.SendWebRequest();
+
+            if (req.result == UnityWebRequest.Result.Success)
+                Debug.Log("Session upload successful: " + req.downloadHandler.text);
+            else
+                Debug.LogError("Session upload failed: " + req.error);
+        }
     }
 }
