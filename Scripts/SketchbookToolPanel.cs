@@ -24,6 +24,9 @@ public class SketchbookToolPanel : MonoBehaviour
 {
     public enum SketchTool { Pencil, Ink, Airbrush, Eraser }
 
+    [Header("Session Tracking")]
+    public MessHallSessionTracker sessionTracker;
+
     [Header("UI References")]
     public Dropdown brushDropdown;
     public Slider sizeSlider;
@@ -86,12 +89,21 @@ public class SketchbookToolPanel : MonoBehaviour
         if (opacitySlider != null)
             opacitySlider.onValueChanged.AddListener(v => brushOpacity = v);
         if (symmetryToggle != null)
-            symmetryToggle.onValueChanged.AddListener(v => mirrorSymmetry = v);
+            symmetryToggle.onValueChanged.AddListener(OnSymmetryToggled);
     }
 
     public void OnBrushChanged(int index)
     {
         currentTool = (SketchTool)index;
+        if (sessionTracker != null)
+            sessionTracker.SwitchTool(currentTool.ToString());
+    }
+
+    void OnSymmetryToggled(bool value)
+    {
+        mirrorSymmetry = value;
+        if (sessionTracker != null)
+            sessionTracker.SetSymmetry(value);
     }
 
     public void OnLayerChanged(int index)
@@ -100,6 +112,8 @@ public class SketchbookToolPanel : MonoBehaviour
         if (formLayer != null) formLayer.SetActive(index == 0);
         if (inkLayer != null) inkLayer.SetActive(index == 1);
         if (lightLayer != null) lightLayer.SetActive(index == 2);
+        if (sessionTracker != null)
+            sessionTracker.AddLayerUsed((index + 1).ToString());
     }
 
     public void SetBrushColor(Color color)

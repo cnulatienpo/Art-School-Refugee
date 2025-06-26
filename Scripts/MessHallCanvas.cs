@@ -28,6 +28,9 @@ public class MessHallCanvas : MonoBehaviour
 
     Vector2? lastPos;                      // Last recorded pen position
 
+    [Header("Session Tracking")]
+    public MessHallSessionTracker sessionTracker;
+
     void Awake()
     {
         if (newSheetButton != null)
@@ -138,6 +141,33 @@ public class MessHallCanvas : MonoBehaviour
         {
             lastPos = null;
         }
+    }
+
+    public void FlipCanvas()
+    {
+        if (content != null)
+        {
+            Vector3 scale = content.localScale;
+            scale.x *= -1f;
+            content.localScale = scale;
+        }
+        if (sessionTracker != null)
+            sessionTracker.RegisterCanvasFlip();
+    }
+
+    public void SetZoom(float zoom)
+    {
+        if (content != null)
+            content.localScale = Vector3.one * zoom;
+        if (sessionTracker != null)
+            sessionTracker.LogZoom(zoom);
+    }
+
+    public void Undo()
+    {
+        // Actual undo logic would go here
+        if (sessionTracker != null)
+            sessionTracker.RegisterUndo();
     }
 
     Vector2 GetTextureCoord(Vector2 screen)

@@ -7,8 +7,11 @@ using UnityEngine;
 /// </summary>
 public class LayerManager : MonoBehaviour
 {
-    [Tooltip("Drawing surfaces for Layer 1, Layer 2 and Layer 3.")]
+    [Tooltip("Drawing surfaces for Layer 1, Layer 2 and Layer 3.")] 
     public Texture[] layers = new Texture[3];
+
+    [Header("Session Tracking")]
+    public MessHallSessionTracker sessionTracker;
 
     int activeIndex;
 
@@ -18,6 +21,8 @@ public class LayerManager : MonoBehaviour
         if (index < 0 || index >= layers.Length)
             return;
         activeIndex = index;
+        if (sessionTracker != null)
+            sessionTracker.AddLayerUsed((index + 1).ToString());
     }
 
     /// <summary>Returns the texture currently targeted for drawing.</summary>
