@@ -46,12 +46,15 @@ public class DrawingSystem : MonoBehaviour
     Vector2? lastPos;
     Stroke currentStroke;
     int strokeOrder;
+    DesktopSettings settings;
 
     void Start()
     {
         SetupCanvas();
         if (canvas != null)
             AddLayer();
+
+        settings = FindObjectOfType<DesktopSettings>();
     }
 
     // Creates the overlay canvas and basic UI.
@@ -275,13 +278,15 @@ public class DrawingSystem : MonoBehaviour
         if (canvas == null || activeLayer < 0)
             return;
 
+        float pressure = settings != null ? Mathf.Clamp01(settings.GetPressure()) : (Input.GetMouseButton(0) ? 1f : 0f);
+
         if (Input.GetMouseButtonDown(0))
         {
             lastPos = GetTextureCoord(Input.mousePosition);
             currentStroke = new Stroke
             {
                 color = currentColor,
-                width = brushSize,
+                width = Mathf.Max(1, Mathf.RoundToInt(brushSize * pressure)),
                 layerIndex = activeLayer,
                 order = strokeOrder++
             };
@@ -301,7 +306,8 @@ public class DrawingSystem : MonoBehaviour
         else if (Input.GetMouseButton(0) && lastPos.HasValue)
         {
             Vector2 pos = GetTextureCoord(Input.mousePosition);
-            DrawLine(layers[activeLayer].texture, lastPos.Value, pos, currentColor, brushSize);
+            DrawLine(layers[activeLayer].texture, lastPos.Value, pos, currentColor,
+                    Mathf.Max(1, Mathf.RoundToInt(brushSize * pressure)));
             lastPos = pos;
             if (currentStroke != null)
                 currentStroke.points.Add(pos);
@@ -368,6 +374,11 @@ public class DrawingSystem : MonoBehaviour
     /// </summary>
     public void SaveStrokesToFile(string path)
     {
+        // allow callers to specify just a file name and store it in the
+        // persistent data directory so desktop builds have write access
+        if (!Path.IsPathRooted(path))
+            path = Path.Combine(Application.persistentDataPath, path);
+
         StrokeSaveData save = new StrokeSaveData();
         for (int i = 0; i < layers.Count; i++)
         {
