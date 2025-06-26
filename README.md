@@ -22,3 +22,12 @@ To create the Mess Hall drawing interface:
 4. Optionally add a prompt bar at the top of the screen as a separate UI element so it stays docked while the content scrolls.
 
 Press **New Sheet** to extend the paper without clearing previous drawings. The `ExportImage` method can be called to save the entire drawing as a PNG; use a PDF library to convert the image to PDF if needed.
+
+## Mess Hall Manager
+
+1. Create an empty GameObject in your scene and add the `MessHallManager` script.
+2. Assign the Mess Hall UI canvas, the prompt bar GameObject, and the scrollable drawing canvas to the `messHallUI`, `promptBar`, and `scrollableCanvas` fields.
+3. Connect your sketchbook button to the `EnterMessHall` method so clicking it opens the Mess Hall.
+4. Add a close or back button inside the Mess Hall and hook its `onClick` event to `ExitMessHall`.
+
+When entering the Mess Hall, all three objects are activated. Exiting hides them again.
