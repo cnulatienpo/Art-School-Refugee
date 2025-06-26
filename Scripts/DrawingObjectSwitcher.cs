@@ -12,6 +12,9 @@ public class DrawingObjectSwitcher : MonoBehaviour
     public Transform spawnPoint;
     public TextMeshProUGUI objectLabel;
 
+    [Header("Session Tracking")]
+    public MessHallSessionTracker sessionTracker;
+
     readonly HashSet<string> availableShapes = new HashSet<string>(System.StringComparer.OrdinalIgnoreCase);
 
     void Awake()
@@ -74,6 +77,9 @@ public class DrawingObjectSwitcher : MonoBehaviour
         {
             objectLabel.text = labelText;
         }
+
+        if (sessionTracker != null && nextPrefab != null)
+            sessionTracker.AddShapeAsset(nextPrefab.name);
     }
 
     /// <summary>
@@ -119,5 +125,8 @@ public class DrawingObjectSwitcher : MonoBehaviour
         {
             objectLabel.text = shapeName;
         }
+
+        if (sessionTracker != null)
+            sessionTracker.AddShapeAsset(shapeName);
     }
 }

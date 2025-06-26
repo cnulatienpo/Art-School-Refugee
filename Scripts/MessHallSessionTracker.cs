@@ -55,6 +55,20 @@ public class MessHallSessionTracker : MonoBehaviour
         data.totalDrawingTime += Time.deltaTime;
     }
 
+    /// <summary>
+    /// Update the currently active prompt ID.
+    /// </summary>
+    public void SetPromptID(string id)
+    {
+        if (!string.IsNullOrEmpty(id))
+            data.promptID = id;
+    }
+
+    /// <summary>
+    /// Toggle symmetry tracking state.
+    /// </summary>
+    public void SetSymmetry(bool enabled) => data.symmetryEnabled = enabled;
+
     /// <summary>Call once when the session begins.</summary>
     public void BeginSession(string promptId, bool symmetry, bool insightsConsent)
     {

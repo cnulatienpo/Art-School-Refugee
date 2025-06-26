@@ -23,6 +23,9 @@ public class PromptChainManager : MonoBehaviour
     public Button nextButton;
     public Image renderingImageUI;
 
+    [Header("Session Tracking")]
+    public MessHallSessionTracker sessionTracker;
+
     // Phrases used when chaining prompts
     [SerializeField] private string[] generalConnectors = { "Then", "Next", "After that" };
     [SerializeField] private string[] spatialConnectors = { "Now", "Nearby", "Above it", "Below it" };
@@ -117,6 +120,8 @@ public class PromptChainManager : MonoBehaviour
             attempts++;
         } while (piece.shape == lastShape && attempts < 20);
         lastShape = piece.shape;
+        if (sessionTracker != null)
+            sessionTracker.SetPromptID(piece.shape);
 
         bool includeModifier = !string.IsNullOrEmpty(piece.modifier) && Random.value > 0.5f;
         bool includeDoodle = !string.IsNullOrEmpty(piece.doodle_addition) && Random.value > 0.5f;
