@@ -31,3 +31,21 @@ Press **New Sheet** to extend the paper without clearing previous drawings. The 
 4. Add a close or back button inside the Mess Hall and hook its `onClick` event to `ExitMessHall`.
 
 When entering the Mess Hall, all three objects are activated. Exiting hides them again.
+
+## Symmetry Handler
+
+Attach the `SymmetryHandler` component anywhere in your scene and assign the
+`SketchbookToolPanel` so it can read the `mirrorSymmetry` toggle. Use
+`GetMirroredPosition` when drawing a brush stroke to obtain the reflected
+location across the center of the drawing area.
+
+To convert pointer coordinates from screen space to the drawing area's local
+space use:
+
+```csharp
+Vector2 localPos;
+RectTransformUtility.ScreenPointToLocalPointInRectangle(
+    drawingArea, Input.mousePosition, canvas.worldCamera, out localPos);
+```
+
+Pass `localPos` to `GetMirroredPosition` to retrieve the mirrored position.
