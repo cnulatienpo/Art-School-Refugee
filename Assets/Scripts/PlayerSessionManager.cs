@@ -4,7 +4,6 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-
 /// <summary>
 /// Automatically tracks a player's sessions and drawing activity without
 /// any user interaction. Session data is written to a JSON file on disk
@@ -68,7 +67,6 @@ public class PlayerSessionManager : MonoBehaviour
     {
         if (PlayerProfile.Current == null)
         {
-            // Fallback to a default profile if none has been loaded yet
             PlayerProfile.LoadOrCreate("Player");
         }
 
@@ -76,7 +74,6 @@ public class PlayerSessionManager : MonoBehaviour
 
         string playerID = PlayerProfile.Current.playerID;
 
-        // Set up autosave directory and path
         string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
         if (!Directory.Exists(dir))
         {
@@ -84,7 +81,6 @@ public class PlayerSessionManager : MonoBehaviour
         }
         autosavePath = Path.Combine(dir, $"autosave_{playerID}.json");
 
-        // Try to load existing autosave
         if (File.Exists(autosavePath))
         {
             try
@@ -104,7 +100,6 @@ public class PlayerSessionManager : MonoBehaviour
             File.Delete(autosavePath);
         }
 
-        // If no session loaded, create new
         if (session == null)
         {
             session = new SessionData
@@ -118,8 +113,6 @@ public class PlayerSessionManager : MonoBehaviour
 
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
-
-        // Record the currently loaded scene
         OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
     }
 
@@ -147,9 +140,6 @@ public class PlayerSessionManager : MonoBehaviour
         session.sceneEntries.Add(currentScene);
     }
 
-    /// <summary>
-    /// Records that the given shape was viewed in the current scene.
-    /// </summary>
     public void LogShapeViewed(string shapeName)
     {
         if (currentScene != null && !string.IsNullOrEmpty(shapeName))
@@ -159,9 +149,6 @@ public class PlayerSessionManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Adds a completed stroke to the session data.
-    /// </summary>
     public void LogStroke(List<Vector2> points, Color color, float width, int layerIndex)
     {
         if (currentScene == null || points == null)
@@ -180,9 +167,6 @@ public class PlayerSessionManager : MonoBehaviour
         usedLayers.Add(layerIndex);
     }
 
-    /// <summary>
-    /// Records the current visibility state of a drawing layer.
-    /// </summary>
     public void SetLayerVisibility(int layerIndex, bool isVisible)
     {
         if (currentScene != null)
@@ -191,9 +175,6 @@ public class PlayerSessionManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Allows other systems to report whether drawing is currently active.
-    /// </summary>
     public void SetDrawingActive(bool active)
     {
         drawingActive = active;
@@ -271,7 +252,8 @@ public class PlayerSessionManager : MonoBehaviour
         string playerID = session.playerID;
         string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss");
         string json = JsonUtility.ToJson(session, true);
-        File.WriteAllText(Path.Combine(dir, $"session_{playerID}_{timestamp}.json"), json);
+        string path = Path.Combine(dir, $"session_{playerID}_{timestamp}.json");
+        File.WriteAllText(path, json);
 
         if (File.Exists(autosavePath))
         {
@@ -280,7 +262,6 @@ public class PlayerSessionManager : MonoBehaviour
 
         PlayerProfile.Save();
 
-        // Automatically export a dataset when the session is saved
         DatasetExporter.Export(json, session.playerID, timestamp);
     }
 }
