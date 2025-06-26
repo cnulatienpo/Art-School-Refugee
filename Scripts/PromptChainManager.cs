@@ -23,9 +23,15 @@ public class PromptChainManager : MonoBehaviour
     public Button nextButton;
     public Image renderingImageUI;
 
+    // Phrases used when chaining prompts
+    [SerializeField] private string[] generalConnectors = { "Then", "Next", "After that" };
+    [SerializeField] private string[] spatialConnectors = { "Now", "Nearby", "Above it", "Below it" };
+
     private List<PromptPiece> promptPieces = new List<PromptPiece>();
     private List<string> promptChain = new List<string>();
     private Dictionary<string, string> renderingLookup = new Dictionary<string, string>();
+
+    private string lastShape = null;
 
     Dictionary<string, string> ParseReferenceJson(string json)
     {
@@ -76,8 +82,15 @@ public class PromptChainManager : MonoBehaviour
 
     void Start()
     {
-        string json = Resources.Load<TextAsset>("prompt_list").text;
-        promptPieces = JsonUtilityWrapper.FromJsonList<PromptPiece>(json);
+        TextAsset listAsset = Resources.Load<TextAsset>("prompt_list");
+        if (listAsset != null)
+        {
+            promptPieces = JsonUtilityWrapper.FromJsonList<PromptPiece>(listAsset.text);
+        }
+        else
+        {
+            Debug.LogWarning("prompt_list.json not found in Resources");
+        }
 
         // Load the rendering reference dictionary
         TextAsset refAsset = Resources.Load<TextAsset>("RenderingSwatches/rendering_reference");
@@ -92,24 +105,47 @@ public class PromptChainManager : MonoBehaviour
 
     public void AddNextPromptPiece()
     {
-        var piece = promptPieces[Random.Range(0, promptPieces.Count)];
-        string chunk = piece.connector_phrase + " draw a " + piece.shape.ToLower();
+        if (promptPieces.Count == 0)
+            return;
 
-        if (!string.IsNullOrEmpty(piece.modifier))
-            chunk += " that is " + piece.modifier.ToLower();
+        // Ensure we pick a shape different from the last
+        PromptPiece piece = null;
+        int attempts = 0;
+        do
+        {
+            piece = promptPieces[Random.Range(0, promptPieces.Count)];
+            attempts++;
+        } while (piece.shape == lastShape && attempts < 20);
+        lastShape = piece.shape;
+
+        bool includeModifier = !string.IsNullOrEmpty(piece.modifier) && Random.value > 0.5f;
+        bool includeDoodle = !string.IsNullOrEmpty(piece.doodle_addition) && Random.value > 0.5f;
+        bool includeRendering = !string.IsNullOrEmpty(piece.rendering) && Random.value > 0.5f;
+
+        string connector;
+        if (!string.IsNullOrEmpty(piece.relative_position))
+            connector = spatialConnectors[Random.Range(0, spatialConnectors.Length)];
+        else
+            connector = generalConnectors[Random.Range(0, generalConnectors.Length)];
+
+        var sb = new StringBuilder();
+        sb.Append(connector + " draw a " + piece.shape.ToLower());
+
+        if (includeModifier)
+            sb.Append(" that is " + piece.modifier.ToLower());
 
         if (!string.IsNullOrEmpty(piece.relative_position))
-            chunk += " " + piece.relative_position;
+            sb.Append(" " + piece.relative_position.ToLower());
 
-        if (!string.IsNullOrEmpty(piece.doodle_addition))
-            chunk += ", and " + piece.doodle_addition.ToLower();
+        if (includeDoodle)
+            sb.Append(", and " + piece.doodle_addition.ToLower());
 
-        if (!string.IsNullOrEmpty(piece.rendering))
-            chunk += ". Cover it in " + piece.rendering.ToLower() + " \uD83D\uDDBC\uFE0F";
+        if (includeRendering)
+            sb.Append(". Cover it in " + piece.rendering.ToLower() + " \uD83D\uDDBC\uFE0F");
 
-        UpdateRenderingImage(piece.rendering);
+        UpdateRenderingImage(includeRendering ? piece.rendering : null);
 
-        promptChain.Add(chunk);
+        promptChain.Add(sb.ToString());
         UpdatePromptDisplay();
     }
 
