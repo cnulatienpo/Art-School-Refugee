@@ -64,7 +64,7 @@ public class PlayerSessionManager : MonoBehaviour
     bool sessionSaved;
     bool summarySaved;
 
-    void Awake()
+    void Start()
     {
         if (PlayerProfile.Current == null)
         {
@@ -74,15 +74,17 @@ public class PlayerSessionManager : MonoBehaviour
 
         PlayerProfile.StartSession();
 
-        // Setup autosave location using the player's unique ID
+        string playerID = PlayerProfile.Current.playerID;
+
+        // Set up autosave directory and path
         string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
         if (!Directory.Exists(dir))
         {
             Directory.CreateDirectory(dir);
         }
-        autosavePath = Path.Combine(dir, $"autosave_{PlayerProfile.Current.playerID}.json");
+        autosavePath = Path.Combine(dir, $"autosave_{playerID}.json");
 
-        // Load any unfinished session from the autosave file
+        // Try to load existing autosave
         if (File.Exists(autosavePath))
         {
             try
@@ -102,11 +104,12 @@ public class PlayerSessionManager : MonoBehaviour
             File.Delete(autosavePath);
         }
 
+        // If no session loaded, create new
         if (session == null)
         {
             session = new SessionData
             {
-                playerID = PlayerProfile.Current.playerID,
+                playerID = playerID,
                 sessionStartTime = DateTime.UtcNow.ToString("o")
             };
         }
@@ -248,7 +251,7 @@ public class PlayerSessionManager : MonoBehaviour
         sessionComplete = true;
         session.sessionEndTime = DateTime.UtcNow.ToString("o");
 
-        string timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss");
         SaveSession();
         SaveSummary(timestamp);
     }
@@ -263,15 +266,12 @@ public class PlayerSessionManager : MonoBehaviour
             session.sessionEndTime = DateTime.UtcNow.ToString("o");
 
         string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
-        if (!Directory.Exists(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
-        string timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-        string path = Path.Combine(dir, $"{session.playerID}_{timestamp}.json");
+        Directory.CreateDirectory(dir);
 
+        string playerID = session.playerID;
+        string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss");
         string json = JsonUtility.ToJson(session, true);
-        File.WriteAllText(path, json);
+        File.WriteAllText(Path.Combine(dir, $"session_{playerID}_{timestamp}.json"), json);
 
         if (File.Exists(autosavePath))
         {
