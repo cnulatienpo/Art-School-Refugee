@@ -74,6 +74,7 @@ public class PlayerSessionManager : MonoBehaviour
 
         PlayerProfile.StartSession();
 
+        // Setup autosave location using the player's unique ID
         string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
         if (!Directory.Exists(dir))
         {
@@ -81,6 +82,7 @@ public class PlayerSessionManager : MonoBehaviour
         }
         autosavePath = Path.Combine(dir, $"autosave_{PlayerProfile.Current.playerID}.json");
 
+        // Load any unfinished session from the autosave file
         if (File.Exists(autosavePath))
         {
             try
@@ -277,6 +279,8 @@ public class PlayerSessionManager : MonoBehaviour
         }
 
         PlayerProfile.Save();
+
+        // Automatically export a dataset when the session is saved
         DatasetExporter.Export(json, session.playerID, timestamp);
     }
 }
