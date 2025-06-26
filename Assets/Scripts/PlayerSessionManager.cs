@@ -44,6 +44,8 @@ public class PlayerSessionManager : MonoBehaviour
     SessionData session;
     SceneEntry currentScene;
     bool drawingActive;
+    DateTime lastAutosaveTime;
+    string autosavePath;
 
     void Awake()
     {
@@ -55,11 +57,45 @@ public class PlayerSessionManager : MonoBehaviour
 
         PlayerProfile.StartSession();
 
-        session = new SessionData
+        string playerID = PlayerProfile.Current.playerID;
+
+        string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
+        if (!Directory.Exists(dir))
         {
-            playerID = PlayerProfile.Current.playerID,
-            sessionStartTime = DateTime.UtcNow.ToString("o")
-        };
+            Directory.CreateDirectory(dir);
+        }
+
+        autosavePath = Path.Combine(dir, $"autosave_{playerID}.json");
+
+        if (File.Exists(autosavePath))
+        {
+            try
+            {
+                string json = File.ReadAllText(autosavePath);
+                SessionData loaded = JsonUtility.FromJson<SessionData>(json);
+                if (loaded != null)
+                {
+                    session = loaded;
+                }
+            }
+            catch (Exception)
+            {
+                session = null;
+            }
+
+            File.Delete(autosavePath);
+        }
+
+        if (session == null)
+        {
+            session = new SessionData
+            {
+                playerID = playerID,
+                sessionStartTime = DateTime.UtcNow.ToString("o")
+            };
+        }
+
+        lastAutosaveTime = DateTime.UtcNow;
 
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -161,6 +197,11 @@ public class PlayerSessionManager : MonoBehaviour
 
         string json = JsonUtility.ToJson(session, true);
         File.WriteAllText(path, json);
+
+        if (File.Exists(autosavePath))
+        {
+            File.Delete(autosavePath);
+        }
 
         PlayerProfile.Save();
     }
