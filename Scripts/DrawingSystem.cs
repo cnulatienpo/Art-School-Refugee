@@ -1,4 +1,6 @@
+using System;
 using System.Collections.Generic;
+using System.IO;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
@@ -11,12 +13,24 @@ using UnityEngine.UI;
 /// </summary>
 public class DrawingSystem : MonoBehaviour
 {
+    /// <summary>Stores a single stroke drawn by the player.</summary>
+    [Serializable]
+    class Stroke
+    {
+        public List<Vector2> points = new List<Vector2>();
+        public Color color;
+        public int width;
+        public int layerIndex;
+        public int order;
+    }
+
     /// <summary>Represents a single drawable layer.</summary>
     class Layer
     {
         public Texture2D texture;
         public RawImage image;
         public Toggle visibility;
+        public List<Stroke> strokes = new List<Stroke>();
     }
 
     readonly List<Layer> layers = new List<Layer>();
@@ -30,6 +44,8 @@ public class DrawingSystem : MonoBehaviour
     int brushSize = 5;
 
     Vector2? lastPos;
+    Stroke currentStroke;
+    int strokeOrder;
 
     void Start()
     {
@@ -238,7 +254,8 @@ public class DrawingSystem : MonoBehaviour
         {
             texture = tex,
             image = img,
-            visibility = toggle
+            visibility = toggle,
+            strokes = new List<Stroke>()
         };
         layers.Add(layer);
         activeLayer = layers.Count - 1;
@@ -259,14 +276,35 @@ public class DrawingSystem : MonoBehaviour
             return;
 
         if (Input.GetMouseButtonDown(0))
+        {
             lastPos = GetTextureCoord(Input.mousePosition);
+            currentStroke = new Stroke
+            {
+                color = currentColor,
+                width = brushSize,
+                layerIndex = activeLayer,
+                order = strokeOrder++
+            };
+            currentStroke.points.Add(lastPos.Value);
+        }
         else if (Input.GetMouseButtonUp(0))
+        {
+            if (currentStroke != null)
+            {
+                Vector2 pos = GetTextureCoord(Input.mousePosition);
+                currentStroke.points.Add(pos);
+                layers[activeLayer].strokes.Add(currentStroke);
+                currentStroke = null;
+            }
             lastPos = null;
+        }
         else if (Input.GetMouseButton(0) && lastPos.HasValue)
         {
             Vector2 pos = GetTextureCoord(Input.mousePosition);
             DrawLine(layers[activeLayer].texture, lastPos.Value, pos, currentColor, brushSize);
             lastPos = pos;
+            if (currentStroke != null)
+                currentStroke.points.Add(pos);
         }
     }
 
@@ -323,5 +361,41 @@ public class DrawingSystem : MonoBehaviour
                     tex.SetPixel(px, py, col);
             }
         }
+    }
+
+    /// <summary>
+    /// Writes all recorded strokes to a JSON file at <paramref name="path"/>.
+    /// </summary>
+    public void SaveStrokesToFile(string path)
+    {
+        StrokeSaveData save = new StrokeSaveData();
+        for (int i = 0; i < layers.Count; i++)
+        {
+            if (layers[i].strokes.Count == 0)
+                continue;
+
+            LayerSaveData data = new LayerSaveData
+            {
+                layerIndex = i,
+                strokes = layers[i].strokes
+            };
+            save.layers.Add(data);
+        }
+
+        string json = JsonUtility.ToJson(save, true);
+        File.WriteAllText(path, json);
+    }
+
+    [Serializable]
+    class LayerSaveData
+    {
+        public int layerIndex;
+        public List<Stroke> strokes = new List<Stroke>();
+    }
+
+    [Serializable]
+    class StrokeSaveData
+    {
+        public List<LayerSaveData> layers = new List<LayerSaveData>();
     }
 }
