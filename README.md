@@ -80,3 +80,15 @@ The exporter writes files to `Application.persistentDataPath` by default. Enable
 `saveToDesktop` to store images on the user's desktop instead. Filenames follow
 the pattern `messhall_sketch_###.png` or `.jpg` and automatically increment so
 existing files are not overwritten.
+
+## Session Upload Server
+
+A small Node.js + Express server receives session data from the Mess Hall and
+stores it in MongoDB Atlas.
+
+1. Copy `.env.example` to `.env` and fill in your `MONGO_URI`.
+2. Run `npm install` to install dependencies.
+3. Start the server with `node server.js`.
+
+The server listens on `/api/messhall/upload` and returns `{ "status": "ok" }`
+when data is successfully stored.
