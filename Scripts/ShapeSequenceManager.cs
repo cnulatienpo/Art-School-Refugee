@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.IO;
 using TMPro;
 using UnityEngine;
+using UnityEngine.UI;
 
 public class ShapeSequenceManager : MonoBehaviour
 {
@@ -42,6 +43,9 @@ public class ShapeSequenceManager : MonoBehaviour
         }
 
         ShowShape(currentIndex);
+
+        // Setup the NextButton to call ShowNextShape when clicked
+        SetupNextButton();
     }
 
     void LoadShapeData()
@@ -118,5 +122,61 @@ public class ShapeSequenceManager : MonoBehaviour
 
         currentIndex = (currentIndex + 1) % shapeOrder.Count;
         ShowShape(currentIndex);
+    }
+
+    /// <summary>
+    /// Finds or creates the UI button named "NextButton" and
+    /// wires it up to trigger <see cref="ShowNextShape"/> when pressed.
+    /// </summary>
+    void SetupNextButton()
+    {
+        Button nextButton = null;
+
+        // Try to find an existing button in the scene
+        GameObject existing = GameObject.Find("NextButton");
+        if (existing != null)
+        {
+            nextButton = existing.GetComponent<Button>();
+        }
+
+        // Create a new button if one does not already exist
+        if (nextButton == null)
+        {
+            // Find or create a canvas to hold the UI
+            Canvas canvas = FindObjectOfType<Canvas>();
+            if (canvas == null)
+            {
+                GameObject canvasGO = new GameObject("Canvas", typeof(Canvas), typeof(CanvasScaler), typeof(GraphicRaycaster));
+                canvas = canvasGO.GetComponent<Canvas>();
+                canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+            }
+
+            GameObject btnGO = new GameObject("NextButton", typeof(RectTransform), typeof(Button), typeof(Image));
+            btnGO.transform.SetParent(canvas.transform, false);
+
+            RectTransform rt = btnGO.GetComponent<RectTransform>();
+            rt.anchorMin = new Vector2(0.5f, 0f);
+            rt.anchorMax = new Vector2(0.5f, 0f);
+            rt.anchoredPosition = new Vector2(0f, 30f);
+            rt.sizeDelta = new Vector2(160f, 30f);
+
+            // Add a simple text label
+            GameObject textGO = new GameObject("Text", typeof(TextMeshProUGUI));
+            textGO.transform.SetParent(btnGO.transform, false);
+            TextMeshProUGUI label = textGO.GetComponent<TextMeshProUGUI>();
+            label.text = "Next";
+            label.alignment = TextAlignmentOptions.Center;
+
+            nextButton = btnGO.GetComponent<Button>();
+        }
+
+        if (nextButton != null)
+        {
+            nextButton.onClick.AddListener(ShowNextShape);
+        }
+        else
+        {
+            Debug.LogWarning("NextButton could not be found or created.");
+        }
     }
 }
