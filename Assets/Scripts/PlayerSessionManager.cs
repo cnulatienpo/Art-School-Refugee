@@ -41,11 +41,28 @@ public class PlayerSessionManager : MonoBehaviour
         public List<SceneEntry> sceneEntries = new List<SceneEntry>();
     }
 
+    [Serializable]
+    class SessionSummary
+    {
+        public string playerID;
+        public int shapesSeen;
+        public int layersUsed;
+        public int strokes;
+        public int drawingTime;
+        public bool sessionComplete;
+    }
+
     SessionData session;
     SceneEntry currentScene;
     bool drawingActive;
     DateTime lastAutosaveTime;
     string autosavePath;
+    HashSet<int> usedLayers = new HashSet<int>();
+    int shapesViewed;
+    int strokeCount;
+    bool sessionComplete;
+    bool sessionSaved;
+    bool summarySaved;
 
     void Awake()
     {
@@ -57,15 +74,12 @@ public class PlayerSessionManager : MonoBehaviour
 
         PlayerProfile.StartSession();
 
-        string playerID = PlayerProfile.Current.playerID;
-
         string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
         if (!Directory.Exists(dir))
         {
             Directory.CreateDirectory(dir);
         }
-
-        autosavePath = Path.Combine(dir, $"autosave_{playerID}.json");
+        autosavePath = Path.Combine(dir, $"autosave_{PlayerProfile.Current.playerID}.json");
 
         if (File.Exists(autosavePath))
         {
@@ -90,7 +104,7 @@ public class PlayerSessionManager : MonoBehaviour
         {
             session = new SessionData
             {
-                playerID = playerID,
+                playerID = PlayerProfile.Current.playerID,
                 sessionStartTime = DateTime.UtcNow.ToString("o")
             };
         }
@@ -109,6 +123,12 @@ public class PlayerSessionManager : MonoBehaviour
         if (drawingActive)
         {
             session.totalDrawingTime += Time.deltaTime;
+        }
+
+        if ((DateTime.UtcNow - lastAutosaveTime).TotalMinutes >= 2)
+        {
+            SaveAutosave();
+            lastAutosaveTime = DateTime.UtcNow;
         }
     }
 
@@ -130,6 +150,7 @@ public class PlayerSessionManager : MonoBehaviour
         if (currentScene != null && !string.IsNullOrEmpty(shapeName))
         {
             currentScene.shapes.Add(shapeName);
+            shapesViewed++;
         }
     }
 
@@ -149,6 +170,9 @@ public class PlayerSessionManager : MonoBehaviour
             layerIndex = layerIndex
         };
         currentScene.strokes.Add(stroke);
+
+        strokeCount++;
+        usedLayers.Add(layerIndex);
     }
 
     /// <summary>
@@ -183,9 +207,58 @@ public class PlayerSessionManager : MonoBehaviour
         }
     }
 
+    void SaveAutosave()
+    {
+        if (session == null)
+            return;
+
+        string json = JsonUtility.ToJson(session, true);
+        File.WriteAllText(autosavePath, json);
+    }
+
+    void SaveSummary(string timestamp)
+    {
+        if (summarySaved)
+            return;
+        summarySaved = true;
+
+        SessionSummary summary = new SessionSummary
+        {
+            playerID = session.playerID,
+            shapesSeen = shapesViewed,
+            layersUsed = usedLayers.Count,
+            strokes = strokeCount,
+            drawingTime = Mathf.RoundToInt(session.totalDrawingTime),
+            sessionComplete = sessionComplete
+        };
+
+        string dir = Path.Combine(Application.persistentDataPath, "SessionSummaries");
+        Directory.CreateDirectory(dir);
+        string path = Path.Combine(dir, $"{session.playerID}_{timestamp}.json");
+        File.WriteAllText(path, JsonUtility.ToJson(summary, true));
+    }
+
+    public void MarkSessionComplete()
+    {
+        if (sessionComplete)
+            return;
+
+        sessionComplete = true;
+        session.sessionEndTime = DateTime.UtcNow.ToString("o");
+
+        string timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        SaveSession();
+        SaveSummary(timestamp);
+    }
+
     void SaveSession()
     {
-        session.sessionEndTime = DateTime.UtcNow.ToString("o");
+        if (sessionSaved)
+            return;
+        sessionSaved = true;
+
+        if (string.IsNullOrEmpty(session.sessionEndTime))
+            session.sessionEndTime = DateTime.UtcNow.ToString("o");
 
         string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
         if (!Directory.Exists(dir))
@@ -204,5 +277,6 @@ public class PlayerSessionManager : MonoBehaviour
         }
 
         PlayerProfile.Save();
+        DatasetExporter.Export(json, session.playerID, timestamp);
     }
 }
