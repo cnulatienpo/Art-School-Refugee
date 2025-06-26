@@ -69,3 +69,14 @@ Use `LayerManager` to organize three numbered layers in your sketchbook scenes.
 `MergeAllLayers` copies pixel data from each layer, including RenderTextures,
 before performing standard alpha blending. The result can be saved as PNG or
 used elsewhere in your project.
+
+## Sketchbook Exporter
+
+Attach the `SketchbookExporter` component to any GameObject and assign its
+`layerManager` field. Call `ExportMergedDrawing` to save the combined layers
+as either PNG or JPG.
+
+The exporter writes files to `Application.persistentDataPath` by default. Enable
+`saveToDesktop` to store images on the user's desktop instead. Filenames follow
+the pattern `messhall_sketch_###.png` or `.jpg` and automatically increment so
+existing files are not overwritten.
