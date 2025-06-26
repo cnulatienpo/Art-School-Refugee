@@ -4,11 +4,6 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-/// <summary>
-/// Automatically tracks a player's sessions and drawing activity without
-/// any user interaction. Session data is written to a JSON file on disk
-/// when the application quits.
-/// </summary>
 public class PlayerSessionManager : MonoBehaviour
 {
     [Serializable]
@@ -63,29 +58,24 @@ public class PlayerSessionManager : MonoBehaviour
     bool sessionSaved;
     bool summarySaved;
 
-    void Awake()
+    void Start()
     {
-        // Ensure a persistent player ID exists
-        string id;
-        if (PlayerPrefs.HasKey("PlayerID"))
+        if (PlayerProfile.Current == null)
         {
-            id = PlayerPrefs.GetString("PlayerID");
+            PlayerProfile.LoadOrCreate("Player");
         }
-        else
-        {
-            id = Guid.NewGuid().ToString();
-            PlayerPrefs.SetString("PlayerID", id);
-            PlayerPrefs.Save();
-        }
+
+        PlayerProfile.StartSession();
+        string playerID = PlayerProfile.Current.playerID;
 
         string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
         if (!Directory.Exists(dir))
         {
             Directory.CreateDirectory(dir);
         }
-        autosavePath = Path.Combine(dir, $"autosave_{id}.json");
 
-        // Attempt to load from autosave if present
+        autosavePath = Path.Combine(dir, $"autosave_{playerID}.json");
+
         if (File.Exists(autosavePath))
         {
             try
@@ -109,7 +99,7 @@ public class PlayerSessionManager : MonoBehaviour
         {
             session = new SessionData
             {
-                playerID = id,
+                playerID = playerID,
                 sessionStartTime = DateTime.UtcNow.ToString("o")
             };
         }
@@ -118,8 +108,6 @@ public class PlayerSessionManager : MonoBehaviour
 
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
-
-        // Record the currently loaded scene
         OnSceneLoaded(SceneManager.GetActiveScene(), LoadSceneMode.Single);
     }
 
@@ -147,9 +135,6 @@ public class PlayerSessionManager : MonoBehaviour
         session.sceneEntries.Add(currentScene);
     }
 
-    /// <summary>
-    /// Records that the given shape was viewed in the current scene.
-    /// </summary>
     public void LogShapeViewed(string shapeName)
     {
         if (currentScene != null && !string.IsNullOrEmpty(shapeName))
@@ -159,9 +144,6 @@ public class PlayerSessionManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Adds a completed stroke to the session data.
-    /// </summary>
     public void LogStroke(List<Vector2> points, Color color, float width, int layerIndex)
     {
         if (currentScene == null || points == null)
@@ -180,9 +162,6 @@ public class PlayerSessionManager : MonoBehaviour
         usedLayers.Add(layerIndex);
     }
 
-    /// <summary>
-    /// Records the current visibility state of a drawing layer.
-    /// </summary>
     public void SetLayerVisibility(int layerIndex, bool isVisible)
     {
         if (currentScene != null)
@@ -191,9 +170,6 @@ public class PlayerSessionManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// Allows other systems to report whether drawing is currently active.
-    /// </summary>
     public void SetDrawingActive(bool active)
     {
         drawingActive = active;
@@ -251,7 +227,7 @@ public class PlayerSessionManager : MonoBehaviour
         sessionComplete = true;
         session.sessionEndTime = DateTime.UtcNow.ToString("o");
 
-        string timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss");
         SaveSession();
         SaveSummary(timestamp);
     }
@@ -266,22 +242,20 @@ public class PlayerSessionManager : MonoBehaviour
             session.sessionEndTime = DateTime.UtcNow.ToString("o");
 
         string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
-        if (!Directory.Exists(dir))
-        {
-            Directory.CreateDirectory(dir);
-        }
-        string timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
-        string path = Path.Combine(dir, $"{session.playerID}_{timestamp}.json");
+        Directory.CreateDirectory(dir);
 
+        string playerID = session.playerID;
+        string timestamp = DateTime.UtcNow.ToString("yyyy-MM-dd_HH-mm-ss");
         string json = JsonUtility.ToJson(session, true);
-        File.WriteAllText(path, json);
+        File.WriteAllText(Path.Combine(dir, $"session_{playerID}_{timestamp}.json"), json);
 
         if (File.Exists(autosavePath))
         {
             File.Delete(autosavePath);
         }
 
-        // Automatically export a dataset when the session is saved
+        PlayerProfile.Save();
+
         DatasetExporter.Export(json, session.playerID, timestamp);
     }
 }
