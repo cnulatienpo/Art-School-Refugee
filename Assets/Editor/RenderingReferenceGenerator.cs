@@ -4,6 +4,11 @@ using System.IO;
 using System.Text;
 using UnityEditor;
 
+/// <summary>
+/// Scans the swatch folder for PNG files and generates a JSON mapping
+/// from cleaned display names to filenames. Invoke via
+/// "Tools -> Generate Rendering Reference" in the Unity Editor.
+/// </summary>
 public static class RenderingReferenceGenerator
 {
     private const string SwatchFolder = "Assets/Resources/RenderingSwatches";
