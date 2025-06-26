@@ -40,11 +40,28 @@ public class PlayerSessionManager : MonoBehaviour
         public List<SceneEntry> sceneEntries = new List<SceneEntry>();
     }
 
+    [Serializable]
+    class SessionSummary
+    {
+        public string playerID;
+        public int shapesSeen;
+        public int layersUsed;
+        public int strokes;
+        public int drawingTime;
+        public bool sessionComplete;
+    }
+
     SessionData session;
     SceneEntry currentScene;
     bool drawingActive;
     DateTime lastAutosaveTime;
     string autosavePath;
+    HashSet<int> usedLayers = new HashSet<int>();
+    int shapesViewed;
+    int strokeCount;
+    bool sessionComplete;
+    bool sessionSaved;
+    bool summarySaved;
 
     void Awake()
     {
@@ -138,6 +155,7 @@ public class PlayerSessionManager : MonoBehaviour
         if (currentScene != null && !string.IsNullOrEmpty(shapeName))
         {
             currentScene.shapes.Add(shapeName);
+            shapesViewed++;
         }
     }
 
@@ -157,6 +175,9 @@ public class PlayerSessionManager : MonoBehaviour
             layerIndex = layerIndex
         };
         currentScene.strokes.Add(stroke);
+
+        strokeCount++;
+        usedLayers.Add(layerIndex);
     }
 
     /// <summary>
@@ -200,9 +221,49 @@ public class PlayerSessionManager : MonoBehaviour
         File.WriteAllText(autosavePath, json);
     }
 
+    void SaveSummary(string timestamp)
+    {
+        if (summarySaved)
+            return;
+        summarySaved = true;
+
+        SessionSummary summary = new SessionSummary
+        {
+            playerID = session.playerID,
+            shapesSeen = shapesViewed,
+            layersUsed = usedLayers.Count,
+            strokes = strokeCount,
+            drawingTime = Mathf.RoundToInt(session.totalDrawingTime),
+            sessionComplete = sessionComplete
+        };
+
+        string dir = Path.Combine(Application.persistentDataPath, "SessionSummaries");
+        Directory.CreateDirectory(dir);
+        string path = Path.Combine(dir, $"{session.playerID}_{timestamp}.json");
+        File.WriteAllText(path, JsonUtility.ToJson(summary, true));
+    }
+
+    public void MarkSessionComplete()
+    {
+        if (sessionComplete)
+            return;
+
+        sessionComplete = true;
+        session.sessionEndTime = DateTime.UtcNow.ToString("o");
+
+        string timestamp = DateTime.UtcNow.ToString("yyyyMMdd_HHmmss");
+        SaveSession();
+        SaveSummary(timestamp);
+    }
+
     void SaveSession()
     {
-        session.sessionEndTime = DateTime.UtcNow.ToString("o");
+        if (sessionSaved)
+            return;
+        sessionSaved = true;
+
+        if (string.IsNullOrEmpty(session.sessionEndTime))
+            session.sessionEndTime = DateTime.UtcNow.ToString("o");
 
         string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
         if (!Directory.Exists(dir))
