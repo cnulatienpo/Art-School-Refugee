@@ -7,6 +7,8 @@ public class ShapeSequenceManager : MonoBehaviour
 {
     public Transform rotator;
     public TextMeshProUGUI cardText;
+    // Reference to the rotation gizmo so we can assign the active object
+    public MouseRotateTarget rotationGizmo;
 
     private Dictionary<string, string> shapeText = new Dictionary<string, string>();
     private List<string> shapeOrder = new List<string>();
@@ -76,6 +78,10 @@ public class ShapeSequenceManager : MonoBehaviour
         if (prefab != null && rotator != null)
         {
             currentShape = Instantiate(prefab, rotator.position, rotator.rotation, rotator);
+            if (rotationGizmo != null)
+            {
+                rotationGizmo.SetTarget(currentShape.transform);
+            }
         }
         else
         {
