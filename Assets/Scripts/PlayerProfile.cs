@@ -1,13 +1,23 @@
 using System;
+using System.Collections.Generic;
 using System.IO;
 using UnityEngine;
 
 [Serializable]
+public class ProgressData
+{
+    public string level = string.Empty;
+    public List<string> shapesSeen = new List<string>();
+}
+
+[Serializable]
 public class PlayerProfileData
 {
+    public string playerID;
     public string playerName;
-    public string uuid;
-    public string progress;
+    public string created;
+    public string lastSession;
+    public ProgressData progress = new ProgressData();
 }
 
 /// <summary>
@@ -31,12 +41,33 @@ public static class PlayerProfile
             Directory.CreateDirectory(dir);
             Current = new PlayerProfileData
             {
+                playerID = Guid.NewGuid().ToString(),
                 playerName = username,
-                uuid = Guid.NewGuid().ToString(),
-                progress = string.Empty
+                created = DateTime.UtcNow.ToString("o"),
+                lastSession = DateTime.UtcNow.ToString("o"),
+                progress = new ProgressData()
             };
-            string json = JsonUtility.ToJson(Current, true);
-            File.WriteAllText(path, json);
+            Save();
         }
+    }
+
+    public static void StartSession()
+    {
+        if (Current != null)
+        {
+            Current.lastSession = DateTime.UtcNow.ToString("o");
+            Save();
+        }
+    }
+
+    public static void Save()
+    {
+        if (Current == null)
+            return;
+
+        string dir = Path.Combine(Application.persistentDataPath, "Players");
+        string path = Path.Combine(dir, $"Player_{Current.playerName}.json");
+        string json = JsonUtility.ToJson(Current, true);
+        File.WriteAllText(path, json);
     }
 }

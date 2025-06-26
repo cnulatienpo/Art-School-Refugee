@@ -4,6 +4,7 @@ using System.IO;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
+
 /// <summary>
 /// Automatically tracks a player's sessions and drawing activity without
 /// any user interaction. Session data is written to a JSON file on disk
@@ -46,22 +47,17 @@ public class PlayerSessionManager : MonoBehaviour
 
     void Awake()
     {
-        // Ensure a persistent player ID exists
-        string id;
-        if (PlayerPrefs.HasKey("PlayerID"))
+        if (PlayerProfile.Current == null)
         {
-            id = PlayerPrefs.GetString("PlayerID");
+            // Fallback to a default profile if none has been loaded yet
+            PlayerProfile.LoadOrCreate("Player");
         }
-        else
-        {
-            id = Guid.NewGuid().ToString();
-            PlayerPrefs.SetString("PlayerID", id);
-            PlayerPrefs.Save();
-        }
+
+        PlayerProfile.StartSession();
 
         session = new SessionData
         {
-            playerID = id,
+            playerID = PlayerProfile.Current.playerID,
             sessionStartTime = DateTime.UtcNow.ToString("o")
         };
 
@@ -165,5 +161,7 @@ public class PlayerSessionManager : MonoBehaviour
 
         string json = JsonUtility.ToJson(session, true);
         File.WriteAllText(path, json);
+
+        PlayerProfile.Save();
     }
 }
