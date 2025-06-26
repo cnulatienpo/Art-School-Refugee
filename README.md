@@ -49,3 +49,23 @@ RectTransformUtility.ScreenPointToLocalPointInRectangle(
 ```
 
 Pass `localPos` to `GetMirroredPosition` to retrieve the mirrored position.
+
+## Layer Manager
+
+Use `LayerManager` to organize three numbered layers in your sketchbook scenes.
+
+1. Create three `RawImage` objects or RenderTextures for Layer 1, Layer 2 and
+   Layer 3.
+2. Add the `LayerManager` component to any GameObject and drag the textures into
+   the `layers` array.
+3. Call `SetActiveLayer(index)` from input scripts to choose which layer the
+   `BrushEngine` draws to, and use `GetActiveTexture()` to retrieve that
+   texture.
+4. When it's time to export or flatten the drawing call `MergeAllLayers()` which
+   blends the three layers from bottom to top and returns a single `Texture2D`.
+   If the `disableLayers` parameter is true the original layer references are
+   cleared so they no longer receive strokes.
+
+`MergeAllLayers` copies pixel data from each layer, including RenderTextures,
+before performing standard alpha blending. The result can be saved as PNG or
+used elsewhere in your project.

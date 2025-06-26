@@ -78,4 +78,53 @@ public class LayerManager : MonoBehaviour
             File.WriteAllBytes(path, tex.EncodeToPNG());
         }
     }
+
+    /// <summary>
+    /// Merges all layers from bottom to top into a single Texture2D.
+    /// Any RenderTextures are read back before blending.
+    /// When <paramref name="disableLayers"/> is true the references are
+    /// cleared after merging so they no longer receive input.
+    /// </summary>
+    public Texture2D MergeAllLayers(bool disableLayers = false)
+    {
+        Texture2D[] textures = ExportAllLayers();
+        Texture2D baseTex = null;
+        for (int i = 0; i < textures.Length; i++)
+        {
+            if (textures[i] != null)
+            {
+                baseTex = textures[i];
+                break;
+            }
+        }
+        if (baseTex == null)
+            return null;
+
+        Texture2D merged = new Texture2D(baseTex.width, baseTex.height, TextureFormat.RGBA32, false);
+        Color[] result = new Color[baseTex.width * baseTex.height];
+
+        for (int i = 0; i < textures.Length; i++)
+        {
+            Texture2D tex = textures[i];
+            if (tex == null) continue;
+            Color[] src = tex.GetPixels();
+            for (int p = 0; p < result.Length; p++)
+            {
+                Color dst = result[p];
+                Color col = src[p];
+                result[p] = Color.Lerp(dst, col, col.a);
+            }
+        }
+
+        merged.SetPixels(result);
+        merged.Apply();
+
+        if (disableLayers)
+        {
+            for (int i = 0; i < layers.Length; i++)
+                layers[i] = null;
+        }
+
+        return merged;
+    }
 }
