@@ -43,6 +43,8 @@ public class PlayerSessionManager : MonoBehaviour
     SessionData session;
     SceneEntry currentScene;
     bool drawingActive;
+    DateTime lastAutosaveTime;
+    string autosavePath;
 
     void Awake()
     {
@@ -59,11 +61,43 @@ public class PlayerSessionManager : MonoBehaviour
             PlayerPrefs.Save();
         }
 
-        session = new SessionData
+        string dir = Path.Combine(Application.persistentDataPath, "PlayerSessions");
+        if (!Directory.Exists(dir))
         {
-            playerID = id,
-            sessionStartTime = DateTime.UtcNow.ToString("o")
-        };
+            Directory.CreateDirectory(dir);
+        }
+        autosavePath = Path.Combine(dir, $"autosave_{id}.json");
+
+        // Attempt to load from autosave if present
+        if (File.Exists(autosavePath))
+        {
+            try
+            {
+                string json = File.ReadAllText(autosavePath);
+                SessionData loaded = JsonUtility.FromJson<SessionData>(json);
+                if (loaded != null)
+                {
+                    session = loaded;
+                }
+            }
+            catch (Exception)
+            {
+                session = null;
+            }
+
+            File.Delete(autosavePath);
+        }
+
+        if (session == null)
+        {
+            session = new SessionData
+            {
+                playerID = id,
+                sessionStartTime = DateTime.UtcNow.ToString("o")
+            };
+        }
+
+        lastAutosaveTime = DateTime.UtcNow;
 
         DontDestroyOnLoad(gameObject);
         SceneManager.sceneLoaded += OnSceneLoaded;
@@ -77,6 +111,12 @@ public class PlayerSessionManager : MonoBehaviour
         if (drawingActive)
         {
             session.totalDrawingTime += Time.deltaTime;
+        }
+
+        if ((DateTime.UtcNow - lastAutosaveTime).TotalMinutes >= 2)
+        {
+            SaveAutosave();
+            lastAutosaveTime = DateTime.UtcNow;
         }
     }
 
@@ -151,6 +191,15 @@ public class PlayerSessionManager : MonoBehaviour
         }
     }
 
+    void SaveAutosave()
+    {
+        if (session == null)
+            return;
+
+        string json = JsonUtility.ToJson(session, true);
+        File.WriteAllText(autosavePath, json);
+    }
+
     void SaveSession()
     {
         session.sessionEndTime = DateTime.UtcNow.ToString("o");
@@ -165,5 +214,10 @@ public class PlayerSessionManager : MonoBehaviour
 
         string json = JsonUtility.ToJson(session, true);
         File.WriteAllText(path, json);
+
+        if (File.Exists(autosavePath))
+        {
+            File.Delete(autosavePath);
+        }
     }
 }
