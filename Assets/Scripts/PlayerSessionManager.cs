@@ -219,5 +219,8 @@ public class PlayerSessionManager : MonoBehaviour
         {
             File.Delete(autosavePath);
         }
+
+        // Automatically export a dataset when the session is saved
+        DatasetExporter.Export(json, session.playerID, timestamp);
     }
 }
