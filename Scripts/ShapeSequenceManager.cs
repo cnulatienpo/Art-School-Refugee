@@ -12,6 +12,9 @@ public class ShapeSequenceManager : MonoBehaviour
     [SerializeField]
     public MouseRotateTarget rotationGizmo;
 
+    [Header("Passage 1 Outro")]
+    public Passage1CompleteUI passage1Complete;
+
     private Dictionary<string, string> shapeText = new Dictionary<string, string>();
     private List<string> shapeOrder = new List<string>();
     private int currentIndex = 0;
@@ -139,9 +142,20 @@ public class ShapeSequenceManager : MonoBehaviour
     {
         if (shapeOrder.Count == 0)
             return;
-
-        currentIndex = (currentIndex + 1) % shapeOrder.Count;
-        ShowShape(currentIndex);
+        if (currentIndex >= shapeOrder.Count - 1)
+        {
+            if (passage1Complete != null)
+            {
+                passage1Complete.Show();
+            }
+            currentIndex = 0;
+            ShowShape(currentIndex);
+        }
+        else
+        {
+            currentIndex++;
+            ShowShape(currentIndex);
+        }
     }
 
     /// <summary>
