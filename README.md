@@ -32,6 +32,17 @@ Press **New Sheet** to extend the paper without clearing previous drawings. The 
 
 When entering the Mess Hall, all three objects are activated. Exiting hides them again.
 
+## Mess Hall Intro Screen
+
+Display a short welcome the first time a player enters the Mess Hall.
+
+1. Inside your Mess Hall UI canvas create a full screen panel with an `Image` and `CanvasGroup`.
+2. Add a `Text` element for the message body, a `Toggle` labelled **Don't show this again**, and a `Button` labelled **Start Drawing**.
+3. Attach `MessHallIntroScreen` to the panel and assign the `panel`, `messageText`, `dontShowAgainToggle` and `startDrawingButton` fields.
+4. Tweak the text area to be wide with top-left alignment and fade the panel's `CanvasGroup` from 0 to 1 when the Mess Hall opens.
+
+The script checks a `PlayerPrefs` key named `messhall_seen`. When the button is pressed it hides the panel and, if the toggle is enabled, saves the preference so the screen will not appear again.
+
 ## Level Strip Manager
 
 Create a small panel that docks to the left side of the screen and displays
