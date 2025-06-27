@@ -30,6 +30,16 @@ public class LevelStripManager : MonoBehaviour
             level2Button.onClick.AddListener(OnLevel2Clicked);
     }
 
+    void OnEnable()
+    {
+        GameManager.Level2Unlocked += OnLevel2Unlocked;
+    }
+
+    void OnDisable()
+    {
+        GameManager.Level2Unlocked -= OnLevel2Unlocked;
+    }
+
     void Start()
     {
         UpdateButtonStates();
@@ -46,6 +56,11 @@ public class LevelStripManager : MonoBehaviour
             if (img != null)
                 img.color = level2Unlocked ? normalColor : Color.gray;
         }
+    }
+
+    void OnLevel2Unlocked()
+    {
+        UpdateButtonStates();
     }
 
     void HighlightActiveButton()
