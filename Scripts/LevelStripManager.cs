@@ -12,6 +12,7 @@ public class LevelStripManager : MonoBehaviour
     public Button level1Button;
     public Button messHallButton;
     public Button level2Button;
+    public Button level3Button;
 
     [Header("Passage 2 Intro")]
     public Passage2IntroUI passage2Intro;
@@ -31,16 +32,20 @@ public class LevelStripManager : MonoBehaviour
             messHallButton.onClick.AddListener(OnMessHallClicked);
         if (level2Button != null)
             level2Button.onClick.AddListener(OnLevel2Clicked);
+        if (level3Button != null)
+            level3Button.onClick.AddListener(OnLevel3Clicked);
     }
 
     void OnEnable()
     {
         GameManager.Level2Unlocked += OnLevel2Unlocked;
+        GameManager.Level3Unlocked += OnLevel3Unlocked;
     }
 
     void OnDisable()
     {
         GameManager.Level2Unlocked -= OnLevel2Unlocked;
+        GameManager.Level3Unlocked -= OnLevel3Unlocked;
     }
 
     void Start()
@@ -52,6 +57,7 @@ public class LevelStripManager : MonoBehaviour
     public void UpdateButtonStates()
     {
         bool level2Unlocked = gameManager != null && gameManager.IsLevel2Unlocked;
+        bool level3Unlocked = gameManager != null && gameManager.IsLevel3Unlocked;
         if (level2Button != null)
         {
             level2Button.interactable = level2Unlocked;
@@ -59,9 +65,21 @@ public class LevelStripManager : MonoBehaviour
             if (img != null)
                 img.color = level2Unlocked ? normalColor : Color.gray;
         }
+        if (level3Button != null)
+        {
+            level3Button.interactable = level3Unlocked;
+            Image img = level3Button.GetComponent<Image>();
+            if (img != null)
+                img.color = level3Unlocked ? normalColor : Color.gray;
+        }
     }
 
     void OnLevel2Unlocked()
+    {
+        UpdateButtonStates();
+    }
+
+    void OnLevel3Unlocked()
     {
         UpdateButtonStates();
     }
@@ -74,6 +92,7 @@ public class LevelStripManager : MonoBehaviour
         SetButtonColor(level1Button, gameManager.ActiveMode == GameManager.Mode.Level1);
         SetButtonColor(messHallButton, gameManager.ActiveMode == GameManager.Mode.MessHall);
         SetButtonColor(level2Button, gameManager.ActiveMode == GameManager.Mode.Level2);
+        SetButtonColor(level3Button, gameManager.ActiveMode == GameManager.Mode.Level3);
     }
 
     void SetButtonColor(Button button, bool active)
@@ -115,6 +134,15 @@ public class LevelStripManager : MonoBehaviour
                 gameManager.EnterLevel2();
                 HighlightActiveButton();
             }
+        }
+    }
+
+    void OnLevel3Clicked()
+    {
+        if (gameManager != null && gameManager.IsLevel3Unlocked)
+        {
+            gameManager.EnterLevel3();
+            HighlightActiveButton();
         }
     }
 }

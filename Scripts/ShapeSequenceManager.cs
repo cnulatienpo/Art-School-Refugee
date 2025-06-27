@@ -15,6 +15,9 @@ public class ShapeSequenceManager : MonoBehaviour
     [Header("Passage 1 Outro")]
     public Passage1CompleteUI passage1Complete;
 
+    [Header("Passage 2 Outro")]
+    public Passage2CompleteUI passage2Complete;
+
     private Dictionary<string, string> shapeText = new Dictionary<string, string>();
     private List<string> shapeOrder = new List<string>();
     private int currentIndex = 0;
@@ -144,7 +147,13 @@ public class ShapeSequenceManager : MonoBehaviour
             return;
         if (currentIndex >= shapeOrder.Count - 1)
         {
-            if (passage1Complete != null)
+            if (GameManager.Instance != null &&
+                GameManager.Instance.ActiveMode == GameManager.Mode.Level2 &&
+                passage2Complete != null)
+            {
+                passage2Complete.Show();
+            }
+            else if (passage1Complete != null)
             {
                 passage1Complete.Show();
             }
