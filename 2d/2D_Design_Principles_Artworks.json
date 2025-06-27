@@ -1,0 +1,72 @@
+[
+    {
+        "Principle": "Focus",
+        "Title": "The Starry Night",
+        "Artist": "Vincent van Gogh",
+        "Year": 1889,
+        "Link": "https://www.moma.org/collection/works/79802"
+    },
+    {
+        "Principle": "Focus",
+        "Title": "American Gothic",
+        "Artist": "Grant Wood",
+        "Year": 1930,
+        "Link": "https://www.artic.edu/artworks/6565/american-gothic"
+    },
+    {
+        "Principle": "Focus",
+        "Title": "The Arnolfini Portrait",
+        "Artist": "Jan van Eyck",
+        "Year": 1434,
+        "Link": "https://www.nationalgallery.org.uk/paintings/jan-van-eyck-the-arnolfini-portrait"
+    },
+    {
+        "Principle": "Focus",
+        "Title": "The Scream",
+        "Artist": "Edvard Munch",
+        "Year": 1893,
+        "Link": "https://www.edvardmunch.org/the-scream.jsp"
+    },
+    {
+        "Principle": "Focus",
+        "Title": "Whistler\u2019s Mother",
+        "Artist": "James McNeill Whistler",
+        "Year": 1871,
+        "Link": "https://www.musee-orsay.fr/en/artworks/arrangement-in-grey-and-black-no1-1662"
+    },
+    {
+        "Principle": "Hierarchy",
+        "Title": "The Birth of Venus",
+        "Artist": "Sandro Botticelli",
+        "Year": 1485,
+        "Link": "https://www.uffizi.it/en/artworks/the-birth-of-venus"
+    },
+    {
+        "Principle": "Hierarchy",
+        "Title": "The Garden of Earthly Delights",
+        "Artist": "Hieronymus Bosch",
+        "Year": 1510,
+        "Link": "https://www.museodelprado.es/en/the-collection/art-work/the-garden-of-earthly-delights/"
+    },
+    {
+        "Principle": "Hierarchy",
+        "Title": "Liberty Leading the People",
+        "Artist": "Eug\u00e8ne Delacroix",
+        "Year": 1830,
+        "Link": "https://www.louvre.fr/en/explore/the-palace/liberty-leading-the-people"
+    },
+    {
+        "Principle": "Hierarchy",
+        "Title": "The Oath of the Horatii",
+        "Artist": "Jacques-Louis David",
+        "Year": 1784,
+        "Link": "https://www.louvre.fr/en/explore/the-palace/the-oath-of-the-horatii"
+    },
+    {
+        "Principle": "Hierarchy",
+        "Title": "The Third of May 1808",
+        "Artist": "Francisco Goya",
+        "Year": 1814,
+        "Link": "https://www.museodelprado.es/en/the-collection/art-work/the-third-of-may-1808/"
+    }
+]
