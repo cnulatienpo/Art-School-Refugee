@@ -20,6 +20,7 @@ public class ShapeSequenceManager : MonoBehaviour
     void Start()
     {
         LoadShapeData();
+        GameManager.OnGrammarChanged += ReloadGrammar;
 
         // If the rotation gizmo wasn't assigned in the inspector, try to
         // locate it in the scene by name so we can still rotate new shapes
@@ -51,12 +52,18 @@ public class ShapeSequenceManager : MonoBehaviour
         SetupTextCard();
     }
 
+    void OnDestroy()
+    {
+        GameManager.OnGrammarChanged -= ReloadGrammar;
+    }
+
     void LoadShapeData()
     {
-        TextAsset data = Resources.Load<TextAsset>("Data/shape_grammar_cards");
+        string path = GameManager.Instance != null ? GameManager.Instance.GetCardsDataPath() : "Data/shape_grammar_cards";
+        TextAsset data = Resources.Load<TextAsset>(path);
         if (data == null)
         {
-            Debug.LogError("shape_grammar_cards.csv not found in Resources/Data");
+            Debug.LogError($"{path}.csv not found in Resources");
             return;
         }
 
@@ -97,7 +104,8 @@ public class ShapeSequenceManager : MonoBehaviour
             Destroy(currentShape);
         }
 
-        GameObject prefab = Resources.Load<GameObject>($"Prefabs/Shapes/Shape_{name}");
+        string prefabPath = GameManager.Instance != null ? GameManager.Instance.GetShapePrefabPath(name) : $"Prefabs/Shapes/Shape_{name}";
+        GameObject prefab = Resources.Load<GameObject>(prefabPath);
         if (prefab != null && rotator != null)
         {
             currentShape = Instantiate(prefab, rotator.position, rotator.rotation, rotator);
@@ -116,6 +124,15 @@ public class ShapeSequenceManager : MonoBehaviour
             cardText.enableAutoSizing = true;
             cardText.text = text;
         }
+    }
+
+    void ReloadGrammar()
+    {
+        shapeText.Clear();
+        shapeOrder.Clear();
+        currentIndex = 0;
+        LoadShapeData();
+        ShowShape(currentIndex);
     }
 
     public void ShowNextShape()
