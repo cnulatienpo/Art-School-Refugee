@@ -13,6 +13,9 @@ public class LevelStripManager : MonoBehaviour
     public Button messHallButton;
     public Button level2Button;
 
+    [Header("Passage 2 Intro")]
+    public Passage2IntroUI passage2Intro;
+
     [Header("Highlight Colors")]
     public Color normalColor = Color.white;
     public Color activeColor = Color.cyan;
@@ -63,7 +66,7 @@ public class LevelStripManager : MonoBehaviour
         UpdateButtonStates();
     }
 
-    void HighlightActiveButton()
+    public void HighlightActiveButton()
     {
         if (gameManager == null)
             return;
@@ -102,7 +105,16 @@ public class LevelStripManager : MonoBehaviour
     void OnLevel2Clicked()
     {
         if (gameManager != null && gameManager.IsLevel2Unlocked)
-            gameManager.EnterLevel2();
-        HighlightActiveButton();
+        {
+            if (passage2Intro != null)
+            {
+                passage2Intro.Show();
+            }
+            else
+            {
+                gameManager.EnterLevel2();
+                HighlightActiveButton();
+            }
+        }
     }
 }
