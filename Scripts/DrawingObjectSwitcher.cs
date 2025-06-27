@@ -20,12 +20,19 @@ public class DrawingObjectSwitcher : MonoBehaviour
     void Awake()
     {
         LoadShapeNames();
+        GameManager.OnGrammarChanged += LoadShapeNames;
+    }
+
+    void OnDestroy()
+    {
+        GameManager.OnGrammarChanged -= LoadShapeNames;
     }
 
     void LoadShapeNames()
     {
         availableShapes.Clear();
-        TextAsset data = Resources.Load<TextAsset>("Data/shape_grammar_cards");
+        string path = GameManager.Instance != null ? GameManager.Instance.GetCardsDataPath() : "Data/shape_grammar_cards";
+        TextAsset data = Resources.Load<TextAsset>(path);
         if (data == null)
             return;
 
@@ -100,7 +107,7 @@ public class DrawingObjectSwitcher : MonoBehaviour
             return;
         }
 
-        string prefabName = "the" + lookup;
+        string prefabName = GameManager.Instance != null ? GameManager.Instance.GetShapePrefabPath(shapeName) : ("the" + lookup);
         GameObject prefab = Resources.Load<GameObject>(prefabName);
         if (prefab == null)
         {
