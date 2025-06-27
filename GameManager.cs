@@ -3,14 +3,16 @@ using UnityEngine;
 
 public class GameManager : MonoBehaviour
 {
-    public enum Mode { Level1, MessHall, Level2 }
+    public enum Mode { Level1, MessHall, Level2, Level3 }
 
     public static GameManager Instance { get; private set; }
 
     public Mode ActiveMode { get; private set; } = Mode.Level1;
     public bool IsLevel2Unlocked = true;
+    public bool IsLevel3Unlocked = false;
 
     public static event Action OnGrammarChanged;
+    public static event Action Level3Unlocked;
 
     void Awake()
     {
@@ -44,6 +46,14 @@ public class GameManager : MonoBehaviour
         OnGrammarChanged?.Invoke();
     }
 
+    public void EnterLevel3()
+    {
+        if (!IsLevel3Unlocked)
+            return;
+        ActiveMode = Mode.Level3;
+        OnGrammarChanged?.Invoke();
+    }
+
     public string GetCardsDataPath()
     {
         return ActiveMode == Mode.Level2 ? "grammer2/level2_shape_grammar_cards" : "Data/shape_grammar_cards";
@@ -57,5 +67,14 @@ public class GameManager : MonoBehaviour
             return "grammer2/" + sanitized;
         }
         return "the" + shapeName.ToLower();
+    }
+
+    public void MarkLevel2Complete()
+    {
+        if (!IsLevel3Unlocked)
+        {
+            IsLevel3Unlocked = true;
+            Level3Unlocked?.Invoke();
+        }
     }
 }
