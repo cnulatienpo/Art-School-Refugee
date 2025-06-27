@@ -32,6 +32,28 @@ Press **New Sheet** to extend the paper without clearing previous drawings. The 
 
 When entering the Mess Hall, all three objects are activated. Exiting hides them again.
 
+## Level Strip Manager
+
+Create a small panel that docks to the left side of the screen and displays
+buttons for quickly changing between play modes.
+
+1. Under your main `Canvas` create an empty `GameObject` named
+   **LevelStrip** and anchor it to the left stretch (min `(0,0)` max `(0,1)`).
+   Give it a fixed width and add a **Vertical Layout Group** component so
+   children are stacked top to bottom.
+2. Inside the strip add three **Button** objects in this order:
+   - **Level 1** &ndash; text `"1"`.
+   - **Mess Hall** &ndash; replace the button image with your sketchbook icon.
+   - **Level 2** &ndash; text `"2"`.
+3. Attach `LevelStripManager` to the **LevelStrip** object and assign the three
+   button references in the inspector.
+4. Ensure a `GameManager` exists in the scene with methods `EnterLevel1()`,
+   `EnterMessHall()` and `EnterLevel2()`. It should expose a boolean
+   `IsLevel2Unlocked` and an `ActiveMode` enum used by the script.
+5. Play the scene. Clicking a button calls the corresponding `GameManager`
+   method. Level 2 remains disabled until `IsLevel2Unlocked` becomes `true` and
+   the currently active mode is highlighted.
+
 ## Symmetry Handler
 
 Attach the `SymmetryHandler` component anywhere in your scene and assign the
